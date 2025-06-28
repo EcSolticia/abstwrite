@@ -1,9 +1,9 @@
 mod absttext;
 
 fn main() {
-    let evald = absttext::matcher::matchers::match_first_sentence("godot is goat. don't you think so?");
+    let evald = absttext::matcher::matchers::match_paragraph("godot is great. okay?");
     if evald == None {
-        println!("No first sentence detected! Did you start your 'sentence' with a period? Silly.");
+        println!("Something went wrong!");
     } else {
         println!("{}", evald.unwrap());
     }
