@@ -20,8 +20,6 @@ pub mod matcher {
     pub mod matchers {
         use crate::absttext::Paragraph;
 
-
-        // will not match headers unless periods.
         pub fn match_first_sentence(input_block: &'static str) -> Option<String> {
             let splits: Vec<&str> = input_block.split('.').collect();
             if splits[0].is_empty() {return None}
@@ -29,40 +27,27 @@ pub mod matcher {
         }
 
         pub fn match_paragraph(input_block: &'static str) -> Option<String> {
-            let splits: Vec<&str> = input_block.split(".").collect();
+            let mut sentence: String = match_first_sentence(input_block).unwrap();
+            let mut vrest: Vec<&str>;
+            let mut rest: &str = " ";
             
-            let mut paragraph: Paragraph = Paragraph::new();
+            let mut paragraph: String = "".to_string();
 
-            let mut last_split_was_period: bool = false;
-            for split in splits {
+            while !(rest.is_empty()) {
+                paragraph.push_str(&sentence);
 
-                let maybe_char: Option<char> = split.chars().next();
-                let mut char: char = ' ';
-                if maybe_char == None {
+                vrest = input_block.split(sentence.as_str()).collect();
+
+                if vrest.len() == 2 {
+                    rest = vrest[1];
+                } else {
                     break;
-                } else {
-                    char = maybe_char.unwrap();
                 }
-                let is_period = char == '.';
 
-                if !is_period == last_split_was_period {
-                    return None;
-                } else if (!is_period) {
-                    paragraph.sentences.push(split.to_string());
-                }
+                sentence = match_first_sentence(rest).unwrap();
             }
 
-            // extract this later
-            let mut paragraph_as_text: String = "".to_string();
-            for sentence in paragraph.sentences {
-                if paragraph_as_text.is_empty() {
-                    paragraph_as_text = format!("{}.", sentence);
-                } else {
-                    paragraph_as_text = format!("{} {}.", paragraph_as_text, sentence);
-                }
-            }
-
-            return Some(paragraph_as_text);
+            return Some(paragraph);
         }
 
     }
