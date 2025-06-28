@@ -25,7 +25,7 @@ pub mod matcher {
         pub fn match_first_sentence(input_block: &'static str) -> Option<String> {
             let splits: Vec<&str> = input_block.split('.').collect();
             if splits[0].is_empty() {return None}
-            else {return Some(splits[0].to_string())}
+            else {return Some( format!("{}.", splits[0].to_string()) )}
         }
 
         pub fn match_paragraph(input_block: &'static str) -> Option<String> {
