@@ -1,25 +1,9 @@
 
-struct Paragraph {
-    sentences: Vec<String>
-}
-impl Paragraph {
-    fn new() -> Paragraph {
-        return Paragraph{ sentences: vec![] };
-    }
-}
-
-enum BlockType {
-    Header,
-    Subheader,
-    Paragraph(Paragraph)
-}
-
 pub mod matcher {
     type MatcherFn = fn(&str) -> Option<String>;
     
-    pub mod matchers {
-
-        fn condense_block_no_newline(input_block: &str) -> String {
+    mod helpers {
+        pub fn condense_block_no_newline(input_block: &str) -> String {
             return input_block.
                 split_whitespace().
                 collect::<Vec<&str>>().
@@ -34,6 +18,12 @@ pub mod matcher {
                 join("\n");
         }
 
+    }
+
+    pub mod matchers {
+        use crate::absttext::matcher::helpers;
+
+        // doesn't return the period that follows
         pub fn match_first_sentence(input_block: &str) -> Option<String> {
             let first_line = input_block.lines().next()?;
             let first_sentence = first_line.split('.').next()?;
@@ -42,7 +32,18 @@ pub mod matcher {
                 return None;
             }
 
-            return Some(condense_block_no_newline(first_sentence));
+            return Some(helpers::condense_block_no_newline(first_sentence));
+        }
+
+        pub fn match_sentence(input_block: &str) -> Option<String> {
+            let input_block_without_dot = helpers::condense_block_no_newline(input_block.trim_matches('.'));
+            let first_sentence_without_dot = match_first_sentence(input_block)?;
+            
+            if input_block_without_dot != first_sentence_without_dot {
+                return None;
+            } else {
+                return Some(first_sentence_without_dot);
+            }
         }
 
     }
