@@ -40,6 +40,7 @@ pub mod matcher {
             return Some(helpers::condense_block_no_newline(first_sentence));
         }
 
+        // [ a sequence of characters ] [ optionally "." ]
         pub fn match_sentence(input_block: &str) -> Option<String> {
             let input_block_without_dot = helpers::condense_block_no_newline(input_block.trim_matches('.'));
             let first_sentence_without_dot = match_first_sentence(input_block)?;
@@ -51,6 +52,7 @@ pub mod matcher {
             }
         }
 
+        // [ possibly two newlines ] [ sentence ] [ two newlines ]
         pub fn match_first_header(input_block: &str) -> Option<String> {
             let condensed_lines: String = condense_block(input_block);
 
@@ -62,6 +64,17 @@ pub mod matcher {
             }
 
             return None;
+        }
+
+        // [ a sequence of sentences joined by "." ]
+        pub fn match_paragraph(input_block: &str) -> Option<String> {
+            let condensed_lines: Vec<String> = get_condensed_lines(input_block);
+
+            if condensed_lines.len() != 1 {
+                return None;
+            } else {
+                return Some(condensed_lines[0].clone());
+            }
         }
         
     }
