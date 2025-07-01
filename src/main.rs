@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let absttext_input: String = fs::read_to_string(args.input_path)?;
 
-    println!("{}", absttext::matcher::matchers::match_first_header(&absttext_input).unwrap());
+    println!("{}", absttext::matcher::matchers::match_paragraph(&absttext_input).unwrap());
 
     Ok(())
 }

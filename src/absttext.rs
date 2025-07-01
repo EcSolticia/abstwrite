@@ -1,3 +1,37 @@
+pub mod types {
+
+    pub enum SentenceTerminators {
+        Period,
+        Exclamation,
+        QuestionMark        
+    }
+    impl SentenceTerminators {
+        pub fn symbol(&self) -> String {
+            match self {
+                SentenceTerminators::Period => ".".to_string(),
+                SentenceTerminators::Exclamation => "!".to_string(),
+                SentenceTerminators::QuestionMark => "?".to_string()
+            }
+        }
+    }
+    
+    pub struct Word {
+        data: String
+    }
+
+    pub struct Sentence {
+        words: Vec<Word>
+    }
+
+    pub struct Paragraph {
+        sentences: Vec<Sentence>
+    }
+
+    pub struct Essay {
+        paragraphs: Vec<Paragraph>
+    }
+
+}
 
 pub mod matcher {
     type MatcherFn = fn(&str) -> Option<String>;
@@ -70,6 +104,8 @@ pub mod matcher {
         pub fn match_paragraph(input_block: &str) -> Option<String> {
             let condensed_lines: Vec<String> = get_condensed_lines(input_block);
 
+            println!("{}", condensed_lines.len());
+            
             if condensed_lines.len() != 1 {
                 return None;
             } else {
