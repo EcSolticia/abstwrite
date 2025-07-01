@@ -15,15 +15,20 @@ pub mod types {
             }
         }
     }
-    
+
     pub struct Word {
         data: String
     }
 
+    use std::collections::VecDeque;
     pub struct Sentence {
-        words: Vec<Word>
+        words: VecDeque<Word>,
+        size: usize
     }
     impl Sentence {
+        pub fn consume_first_word(&mut self) -> Option<Word> {
+            return self.words.pop_front();
+        }
         pub fn new(data: String) -> Option<Sentence> {
             let sentence: String = matchers::match_sentence(&data)?;
 
@@ -34,22 +39,41 @@ pub mod types {
                 sentence_data.push(Word{data: word.to_string()});
             }
 
-            return Some(Sentence{words: sentence_data});
+            return Some(Sentence{words: VecDeque::from(sentence_data), size: sentence.len()});
         }
     }
 
     pub struct Paragraph {
-        sentences: Vec<Sentence>
+        sentences: VecDeque<Sentence>
     }
     impl Paragraph {
+        pub fn consume_first_sentence(&mut self) -> Option<Sentence> {
+            return self.sentences.pop_front();
+        }
         pub fn new(data: String) -> Option<Paragraph> {
+            let mut working_paragraph_data: String = matchers::match_paragraph(&data)?;
+
+            let mut prospective_sentences: VecDeque<Sentence> = VecDeque::from(vec![]);
+
+            while !working_paragraph_data.is_empty() {
+                prospective_sentences.push_back(
+                    Sentence::new(matchers::match_first_sentence(&working_paragraph_data)?)?
+                );
+
+                working_paragraph_data = working_paragraph_data.split_off(prospective_sentences.back()?.size);
+            }
             
-            
+            Some(Paragraph{sentences: prospective_sentences})
         }
     }
 
     pub struct Essay {
-        paragraphs: Vec<Paragraph>
+        paragraphs: VecDeque<Paragraph>
+    }
+    impl Essay {
+        pub fn from_paragraph(paragraph: Paragraph) -> Essay {
+            Essay{paragraphs: VecDeque::from(vec![paragraph])}
+        }
     }
 
 }
@@ -75,6 +99,7 @@ pub mod matcher {
         pub fn condense_block(input_block: &str) -> String {
             return get_condensed_lines(input_block).join("\n");
         }
+
     }
 
     pub mod matchers {
@@ -142,18 +167,9 @@ pub mod parser {
 
     use std::collections::VecDeque;
 
+    // WIP
     pub fn parse_into_essay(absttext_input: String) -> Option<types::Essay> {
-        let condensed_lines: VecDeque<String> = VecDeque::from(helpers::get_condensed_lines(&absttext_input));
-
-        let mut essay: types::Essay;
-
-        for line in condensed_lines {
-            
-            if matchers::match_paragraph(&line) != None {
-                return types::Paragraph::new(line);
-            }
-
-        }
+        
 
         None
     }
