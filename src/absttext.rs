@@ -234,5 +234,12 @@ mod tests {
             Some("I am a sentence.".to_string())
         )
     }
+    #[test]
+    fn test_match_paragraph_qin_noperiod_sentence() {
+        assert_eq!(
+            match_paragraph("I am a sentence"),
+            Some("I am a sentence".to_string())
+        )
+    }
 
 }
