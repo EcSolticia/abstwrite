@@ -21,6 +21,8 @@ pub mod types {
     }
 
     use std::collections::VecDeque;
+
+    use super::matcher::helpers::condense_block;
     pub struct Sentence {
         words: VecDeque<Word>,
         size: usize
@@ -73,6 +75,10 @@ pub mod types {
     impl Essay {
         pub fn from_paragraph(paragraph: Paragraph) -> Essay {
             Essay{paragraphs: VecDeque::from(vec![paragraph])}
+        }
+        // assumes that the string is already a result of matchers::match_paragraph
+        pub fn from_paragraph_string(paragraph: String) -> Option<Essay> {
+            Some(Essay{paragraphs: VecDeque::from(vec![Paragraph::new(paragraph)?])})
         }
     }
 
@@ -167,9 +173,13 @@ pub mod parser {
 
     use std::collections::VecDeque;
 
+    use super::matcher::matchers::match_paragraph;
+
     // WIP
     pub fn parse_into_essay(absttext_input: String) -> Option<types::Essay> {
-        
+        if match_paragraph(&absttext_input).is_some() {
+            return types::Essay::from_paragraph_string(absttext_input);
+        }
 
         None
     }
