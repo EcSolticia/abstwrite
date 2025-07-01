@@ -1,4 +1,5 @@
 pub mod types {
+    use crate::absttext::matcher::matchers;
 
     pub enum SentenceTerminators {
         Period,
@@ -22,9 +23,29 @@ pub mod types {
     pub struct Sentence {
         words: Vec<Word>
     }
+    impl Sentence {
+        pub fn new(data: String) -> Option<Sentence> {
+            let sentence: String = matchers::match_sentence(&data)?;
+
+            let words = sentence.split_whitespace();
+            let mut sentence_data: Vec<Word> = vec![];
+
+            for word in words {
+                sentence_data.push(Word{data: word.to_string()});
+            }
+
+            return Some(Sentence{words: sentence_data});
+        }
+    }
 
     pub struct Paragraph {
         sentences: Vec<Sentence>
+    }
+    impl Paragraph {
+        pub fn new(data: String) -> Option<Paragraph> {
+            
+            
+        }
     }
 
     pub struct Essay {
@@ -36,7 +57,7 @@ pub mod types {
 pub mod matcher {
     type MatcherFn = fn(&str) -> Option<String>;
     
-    mod helpers {
+    pub mod helpers {
         pub fn condense_block_no_newline(input_block: &str) -> String {
             return input_block.
                 split_whitespace().
@@ -54,7 +75,6 @@ pub mod matcher {
         pub fn condense_block(input_block: &str) -> String {
             return get_condensed_lines(input_block).join("\n");
         }
-
     }
 
     pub mod matchers {
@@ -64,7 +84,7 @@ pub mod matcher {
 
         // doesn't return the period that follows
         pub fn match_first_sentence(input_block: &str) -> Option<String> {
-            let first_line = input_block.lines().next()?;
+            let first_line: &str = input_block.lines().next()?;
             let first_sentence = first_line.split('.').next()?;
             
             if first_sentence.trim().is_empty() {
@@ -113,6 +133,29 @@ pub mod matcher {
             }
         }
         
+    }
+}
+
+pub mod parser {
+    use crate::absttext::types;
+    use crate::absttext::matcher::{matchers, helpers};
+
+    use std::collections::VecDeque;
+
+    pub fn parse_into_essay(absttext_input: String) -> Option<types::Essay> {
+        let condensed_lines: VecDeque<String> = VecDeque::from(helpers::get_condensed_lines(&absttext_input));
+
+        let mut essay: types::Essay;
+
+        for line in condensed_lines {
+            
+            if matchers::match_paragraph(&line) != None {
+                return types::Paragraph::new(line);
+            }
+
+        }
+
+        None
     }
 }
 
