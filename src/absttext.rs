@@ -57,9 +57,9 @@ pub mod types {
             let mut prospective_sentences: VecDeque<Sentence> = VecDeque::from(vec![]);
 
             while !working_paragraph_data.is_empty() {
-                if matchers::match_sentence_terminator(&working_paragraph_data).is_some() {
+                if matchers::match_sentence_terminator_str(&working_paragraph_data).is_some() {
                     working_paragraph_data = working_paragraph_data.split_off(
-                        matchers::match_sentence_terminator(&working_paragraph_data)?.len()
+                        matchers::match_sentence_terminator_str(&working_paragraph_data)?.len()
                     );
                     continue;
                 }
@@ -118,24 +118,38 @@ pub mod matcher {
 
         use super::helpers::{condense_block, get_condensed_lines};
 
-        const SENTENCE_TERMINATORS: [&'static str; 3] = [
-            ".",
-            "!",
-            "?"
+        const SENTENCE_TERMINATORS: [char; 3] = [
+            '.',
+            '!',
+            '?'
         ];
 
-        pub fn match_sentence_terminator(input_block: &str) -> Option<String> {
-            if SENTENCE_TERMINATORS.contains(&input_block) {
-                return Some(input_block.to_string());
+        fn match_sentence_terminator(input_char: &char) -> Option<char> {
+            if SENTENCE_TERMINATORS.contains(&input_char) {
+                return Some(*input_char);
             } else {
                 return None;
             }
         }
 
+        pub fn match_sentence_terminator_str(input_block: &str) -> Option<String> {
+            if input_block.len() != 1 {
+                return None;
+            }
+
+            let input_char: char = input_block.chars().nth(0)?;
+
+            let output: String = match_sentence_terminator(&input_char)?.to_string();
+
+            return Some(output);
+        }
+
         // doesn't return the period that follows
         pub fn match_first_sentence(input_block: &str) -> Option<String> {
             let first_line: &str = input_block.lines().next()?;
-            let first_sentence = first_line.split('.').next()?;
+            let first_sentence = first_line
+                .split(|c: char| match_sentence_terminator(&c).is_some())
+                .next()?;
             
             if first_sentence.trim().is_empty() {
                 return None;
