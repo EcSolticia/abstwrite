@@ -1,30 +1,20 @@
 pub mod types {
     use crate::absttext::matcher::matchers;
 
-    pub enum SentenceTerminators {
-        Period,
-        Exclamation,
-        QuestionMark        
-    }
-    impl SentenceTerminators {
-        pub fn symbol(&self) -> String {
-            match self {
-                SentenceTerminators::Period => ".".to_string(),
-                SentenceTerminators::Exclamation => "!".to_string(),
-                SentenceTerminators::QuestionMark => "?".to_string()
-            }
-        }
-    }
-
     pub struct Word {
-        data: String
+        pub data: String
+    }
+    impl Word {
+        pub fn get_data(&self) -> String {
+            self.data.clone()
+        }
     }
 
     use std::collections::VecDeque;
 
     use super::matcher::helpers::condense_block;
     pub struct Sentence {
-        words: VecDeque<Word>,
+        pub words: VecDeque<Word>,
         size: usize
     }
     impl Sentence {
@@ -45,8 +35,17 @@ pub mod types {
         }
     }
 
+    impl Clone for Sentence {
+        fn clone(&self) -> Sentence {
+            let words = self.words.iter();
+            Sentence::new(
+                words.map(Word::get_data).collect::<Vec<String>>().join(" ")
+            ).unwrap()
+        }
+    }
+
     pub struct Paragraph {
-        sentences: VecDeque<Sentence>
+        pub sentences: VecDeque<Sentence>
     }
     impl Paragraph {
         pub fn consume_first_sentence(&mut self) -> Option<Sentence> {
@@ -58,19 +57,25 @@ pub mod types {
             let mut prospective_sentences: VecDeque<Sentence> = VecDeque::from(vec![]);
 
             while !working_paragraph_data.is_empty() {
+                if matchers::match_sentence_terminator(&working_paragraph_data).is_some() {
+                    working_paragraph_data = working_paragraph_data.split_off(
+                        matchers::match_sentence_terminator(&working_paragraph_data)?.len()
+                    );
+                    continue;
+                }
                 prospective_sentences.push_back(
                     Sentence::new(matchers::match_first_sentence(&working_paragraph_data)?)?
                 );
 
                 working_paragraph_data = working_paragraph_data.split_off(prospective_sentences.back()?.size);
             }
-            
+
             Some(Paragraph{sentences: prospective_sentences})
         }
     }
 
     pub struct Essay {
-        paragraphs: VecDeque<Paragraph>
+        pub paragraphs: VecDeque<Paragraph>
     }
     impl Essay {
         pub fn from_paragraph(paragraph: Paragraph) -> Essay {
@@ -113,6 +118,20 @@ pub mod matcher {
 
         use super::helpers::{condense_block, get_condensed_lines};
 
+        const SENTENCE_TERMINATORS: [&'static str; 3] = [
+            ".",
+            "!",
+            "?"
+        ];
+
+        pub fn match_sentence_terminator(input_block: &str) -> Option<String> {
+            if SENTENCE_TERMINATORS.contains(&input_block) {
+                return Some(input_block.to_string());
+            } else {
+                return None;
+            }
+        }
+
         // doesn't return the period that follows
         pub fn match_first_sentence(input_block: &str) -> Option<String> {
             let first_line: &str = input_block.lines().next()?;
@@ -154,8 +173,6 @@ pub mod matcher {
         // [ a sequence of sentences joined by "." ]
         pub fn match_paragraph(input_block: &str) -> Option<String> {
             let condensed_lines: Vec<String> = get_condensed_lines(input_block);
-
-            println!("{}", condensed_lines.len());
             
             if condensed_lines.len() != 1 {
                 return None;
@@ -183,6 +200,12 @@ pub mod parser {
 
         None
     }
+}
+
+pub trait MarkupGenerator {
+    fn generate_sentence(sentence: types::Sentence) -> String;
+    fn generate_paragraph(paragraph: types::Paragraph) -> String;
+    fn generate(essay: types::Essay) -> String;
 }
 
 #[cfg(test)]
