@@ -1,0 +1,5 @@
+
+enum Word {
+    data ( String ),
+    emphasized ( bool )
+}
